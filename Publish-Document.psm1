@@ -50,20 +50,35 @@ function Compare-Datetime {
 }
 function Invoke-Executor {
      param($cmd)
+     $result = New-Object PSObject |
+        Add-Member -PassThru NoteProperty state $true |
+        Add-Member -PassThru NoteProperty output $null
+
      if ($cmd.GetType().Name -eq "String") {
-         Write-Host (cmd /c "$cmd")
+         Write-Host "> $cmd"
+         $result.output = cmd /c $cmd
+         $result.state = $?
+         Write-Host $result.output
      } else {
-         $cmd.keys |
-         % {
-             Write-Host (& $_ -Exports $Exports -Arguments $cmd[$_])
+         $cmd.keys | Select -First 1 | % {
+             Write-Host "> $_ : $($cmd[$_])"
+             $result.output = & $_ -Exports $script:Exports -Arguments $cmd[$_]
+             $result.state = $?
+             Write-Host $result.output
          }
      }
-     return $?
+     Write-Host ""
+     return $result
 }
 function Invoke-Task {
     param($node)
     # 実行済みのタスクはスキップする
-    if ($node["state"] -eq "executed") { return }
+    if ($node["state"] -eq "executed") {
+        Write-Host "Skip: Task $($node.name)"
+        return
+    } else {
+        Write-Host "Call: Task $($node.name)"
+    }
 
     if ((Test-Path $node["name"])) {
         # ターゲットとなるファイルが存在するとき、ファイルの更新日時を比較する。
@@ -71,7 +86,7 @@ function Invoke-Task {
         # ターゲットの更新日時が依存先の更新日時より古いとき、
         # 依存先のタスクを実行する
         Write-Output 1 |
-        ? { Compare-Datetime($node) } | 
+        ? { Compare-Datetime($node) } |
         % { $node["from"] } |
         ? { $_ } |
         % {
@@ -150,7 +165,7 @@ function Publish-Document {
         throw $_
     }
 
-    if ($Opts["List"]) {
+    if ($Opts.List) {
         Show-TaskList $script:Dependencies
         return # return
     }
@@ -164,11 +179,11 @@ function Publish-Document {
     }
     $script:Graph = Get-Graph($Target)
 
-    if ($Opts["Test"]) {
+    if ($Opts.Test) {
         Test-Task $script:Graph
         return # return
     }
-    
+
     Invoke-Task $script:Graph # 結果を出力する
 }
 
