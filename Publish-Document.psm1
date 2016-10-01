@@ -1,25 +1,25 @@
-[System.Collections.Stack]$circle   # ƒOƒ‰ƒt‚ÌzŠÂƒ`ƒFƒbƒN—pƒXƒ^ƒbƒN
-[System.Collections.Hashtable]$Dependencies # ˆË‘¶ŠÖŒW‚ğ•\‚·ƒnƒbƒVƒ…ƒe[ƒuƒ‹
-[System.Collections.Hashtable]$Graph    # ˆË‘¶ŠÖŒW‚ğ‰ğŒˆ‚µ‚½ƒOƒ‰ƒt‚Ìƒm[ƒh
-[System.Collections.Hashtable]$Exports  # ƒ^ƒXƒNŠÔ‚Ìƒf[ƒ^ŒğŠ·—pƒRƒ“ƒeƒi
-[System.Management.Automation.PSCustomObject]$Opts  # ƒIƒvƒVƒ‡ƒ“‰ğÍŒ‹‰Ê‚ğŠi”[‚·‚éƒRƒ“ƒeƒi
+ï»¿[System.Collections.Stack]$circle   # ã‚°ãƒ©ãƒ•ã®å¾ªç’°ãƒã‚§ãƒƒã‚¯ç”¨ã‚¹ã‚¿ãƒƒã‚¯
+[System.Collections.Hashtable]$Dependencies # ä¾å­˜é–¢ä¿‚ã‚’è¡¨ã™ãƒãƒƒã‚·ãƒ¥ãƒ†ãƒ¼ãƒ–ãƒ«
+[System.Collections.Hashtable]$Graph    # ä¾å­˜é–¢ä¿‚ã‚’è§£æ±ºã—ãŸã‚°ãƒ©ãƒ•ã®ãƒãƒ¼ãƒ‰
+[System.Collections.Hashtable]$Exports  # ã‚¿ã‚¹ã‚¯é–“ã®ãƒ‡ãƒ¼ã‚¿äº¤æ›ç”¨ã‚³ãƒ³ãƒ†ãƒŠ
+[System.Management.Automation.PSCustomObject]$Opts  # ã‚ªãƒ—ã‚·ãƒ§ãƒ³è§£æçµæœã‚’æ ¼ç´ã™ã‚‹ã‚³ãƒ³ãƒ†ãƒŠ
 
 function Get-Graph {
     param($Target)
 
-    # zŠÂƒOƒ‰ƒt‚ÍƒGƒ‰[‚Æ‚·‚é
+    # å¾ªç’°ã‚°ãƒ©ãƒ•ã¯ã‚¨ãƒ©ãƒ¼ã¨ã™ã‚‹
     if ($script:circle.Contains($Target)) { throw "circle graph: $Target" }
-    $circle.Push($Target) > $null # zŠÂƒ`ƒFƒbƒN
+    $circle.Push($Target) > $null # å¾ªç’°ãƒã‚§ãƒƒã‚¯
 
     $root = $script:Dependencies[$Target]
     if ($root -eq $null) {
-        # Publish ƒtƒ@ƒCƒ‹‚Éƒ^[ƒQƒbƒg‚ª–³‚¢ê‡
-        # $Target ‚Íƒtƒ@ƒCƒ‹–¼‚Å‚ ‚é‚Æ”»’f‚µ‚ÄAV‚µ‚­ƒm[ƒh‚ğì‚é
+        # Publish ãƒ•ã‚¡ã‚¤ãƒ«ã«ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãŒç„¡ã„å ´åˆ
+        # $Target ã¯ãƒ•ã‚¡ã‚¤ãƒ«åã§ã‚ã‚‹ã¨åˆ¤æ–­ã—ã¦ã€æ–°ã—ããƒãƒ¼ãƒ‰ã‚’ä½œã‚‹
         $root = New-Object System.Collections.Hashtable
         $root.Add("name", $Target) > $null
     } else {
-        # Publish ƒtƒ@ƒCƒ‹‚Éƒ^[ƒQƒbƒg‚ª‚ ‚éê‡
-        # ƒ^[ƒQƒbƒg‚ğ Graph ƒm[ƒh‚É’uŠ·‚·‚é
+        # Publish ãƒ•ã‚¡ã‚¤ãƒ«ã«ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãŒã‚ã‚‹å ´åˆ
+        # ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’ Graph ãƒãƒ¼ãƒ‰ã«ç½®æ›ã™ã‚‹
         $root.from | ? { $_ } |
         % {
             $children = New-Object System.Collections.ArrayList
@@ -29,7 +29,7 @@ function Get-Graph {
             $root.from = $children
         }
     }
-    $script:circle.Pop() > $null # zŠÂƒ`ƒFƒbƒN
+    $script:circle.Pop() > $null # å¾ªç’°ãƒã‚§ãƒƒã‚¯
     return $root
 }
 function Compare-Datetime {
@@ -62,14 +62,14 @@ function Invoke-Executor {
 }
 function Invoke-Task {
     param($node)
-    # ÀsÏ‚İ‚Ìƒ^ƒXƒN‚ÍƒXƒLƒbƒv‚·‚é
+    # å®Ÿè¡Œæ¸ˆã¿ã®ã‚¿ã‚¹ã‚¯ã¯ã‚¹ã‚­ãƒƒãƒ—ã™ã‚‹
     if ($node["state"] -eq "executed") { return }
 
     if ((Test-Path $node["name"])) {
-        # ƒ^[ƒQƒbƒg‚Æ‚È‚éƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚é‚Æ‚«Aƒtƒ@ƒCƒ‹‚ÌXV“ú‚ğ”äŠr‚·‚éB
+        # ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã¨ãªã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹ã¨ãã€ãƒ•ã‚¡ã‚¤ãƒ«ã®æ›´æ–°æ—¥æ™‚ã‚’æ¯”è¼ƒã™ã‚‹ã€‚
 
-        # ƒ^[ƒQƒbƒg‚ÌXV“ú‚ªˆË‘¶æ‚ÌXV“ú‚æ‚èŒÃ‚¢‚Æ‚«A
-        # ˆË‘¶æ‚Ìƒ^ƒXƒN‚ğÀs‚·‚é
+        # ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®æ›´æ–°æ—¥æ™‚ãŒä¾å­˜å…ˆã®æ›´æ–°æ—¥æ™‚ã‚ˆã‚Šå¤ã„ã¨ãã€
+        # ä¾å­˜å…ˆã®ã‚¿ã‚¹ã‚¯ã‚’å®Ÿè¡Œã™ã‚‹
         Write-Output 1 |
         ? { Compare-Datetime($node) } | 
         % { $node["from"] } |
@@ -78,19 +78,19 @@ function Invoke-Task {
             Invoke-Task($_) > $null
         }
     } else {
-        # ƒ^[ƒQƒbƒg‚Æ‚È‚éƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚È‚¢‚Æ‚«AˆË‘¶æƒ^ƒXƒN‚ğ‘S‚ÄÀs‚·‚é
+        # ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã¨ãªã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ãªã„ã¨ãã€ä¾å­˜å…ˆã‚¿ã‚¹ã‚¯ã‚’å…¨ã¦å®Ÿè¡Œã™ã‚‹
         $node["from"] | ? { $_ } | 
         % {
             Invoke-Task($_) > $null
         }
     }
 
-    # ƒ^ƒXƒN‚ÌÀsiÀsŒ‹‰Ê‚ªˆê‚Â‚Å‚à¸”s‚È‚çAƒ^ƒXƒN‚ÌƒXƒe[ƒ^ƒX‚Í¸”sj
+    # ã‚¿ã‚¹ã‚¯ã®å®Ÿè¡Œï¼ˆå®Ÿè¡ŒçµæœãŒä¸€ã¤ã§ã‚‚å¤±æ•—ãªã‚‰ã€ã‚¿ã‚¹ã‚¯ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã¯å¤±æ•—ï¼‰
     $result = $node["exec"] | ? { $_ } | % { Invoke-Executor($_) }
     $result = $result | ? { -not $_ } | select -first 1
     if ($result) { $node["result"] = $result } else { $node["result"] = "success" }
     
-    # ƒ^ƒXƒN‚ÌƒXƒe[ƒ^ƒX‚ğÀsÏ‚İ‚É•ÏX
+    # ã‚¿ã‚¹ã‚¯ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’å®Ÿè¡Œæ¸ˆã¿ã«å¤‰æ›´
     $node["state"] = "executed"
 
     return $node["result"]
@@ -133,7 +133,7 @@ function Publish-Document {
         [switch]$List = $false
     )
 
-    # ƒ‚ƒWƒ…[ƒ‹‘S‘Ì‚Å‹¤—p‚·‚é•Ï”‚Ì‰Šú‰»
+    # ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å…¨ä½“ã§å…±ç”¨ã™ã‚‹å¤‰æ•°ã®åˆæœŸåŒ–
     $script:circle = New-Object System.Collections.Stack
 
     $script:Opts = New-Object psobject |
@@ -142,20 +142,25 @@ function Publish-Document {
 
     $script:Exports = New-Object System.Collections.Hashtable
 
-    # ‚±‚Ì•Ó‚©‚çˆ—ŠJn
-    $script:Dependencies = Import-YAML (Resolve-Path $File)
+    # ã“ã®è¾ºã‚Šã‹ã‚‰ Publish ãƒ•ã‚¡ã‚¤ãƒ«ã®è§£æé–‹å§‹
+    try {
+        $Path = Resolve-Path $File
+        $script:Dependencies = Import-YAML $Path
+    } catch {
+        throw $_
+    }
 
     if ($Opts["List"]) {
         Show-TaskList $script:Dependencies
         return # return
     }
 
-    # ‘S‚Ä‚Ìƒm[ƒh‚É‹¤’Ê‚Ì‘®«‚ğ•t—^‚·‚é
+    # å…¨ã¦ã®ãƒãƒ¼ãƒ‰ã«å…±é€šã®å±æ€§ã‚’ä»˜ä¸ã™ã‚‹
     $script:Dependencies.keys |
     % {
-        $script:Dependencies[$_].Add("name", $_) # ƒ^[ƒQƒbƒg‚Ì–¼‘O‚à‚µ‚­‚Í¶¬‚·‚éƒtƒ@ƒCƒ‹‚Ì–¼‘O
-        $script:Dependencies[$_].Add("state", "wait") # ƒm[ƒh‚Ìó‘Ô
-        $script:Dependencies[$_].Add("result", "") # ÀsŒ‹‰Ê
+        $script:Dependencies[$_].Add("name", $_) # ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®åå‰ã‚‚ã—ãã¯ç”Ÿæˆã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã®åå‰
+        $script:Dependencies[$_].Add("state", "wait") # ãƒãƒ¼ãƒ‰ã®çŠ¶æ…‹
+        $script:Dependencies[$_].Add("result", "") # å®Ÿè¡Œçµæœ
     }
     $script:Graph = Get-Graph($Target)
 
@@ -164,10 +169,10 @@ function Publish-Document {
         return # return
     }
     
-    Invoke-Task $script:Graph # Œ‹‰Ê‚ğo—Í‚·‚é
+    Invoke-Task $script:Graph # çµæœã‚’å‡ºåŠ›ã™ã‚‹
 }
 
-# ƒ‚ƒWƒ…[ƒ‹‚Ìƒ[ƒh
+# ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®ãƒ­ãƒ¼ãƒ‰
 $modules = New-Object PSObject
 $moduleRoot = Split-Path -Path $MyInvocation.MyCommand.Path
 "$moduleRoot\Modules\*.psm1" |
