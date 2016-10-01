@@ -171,6 +171,7 @@ function Publish-Document {
 $modules = New-Object PSObject
 $moduleRoot = Split-Path -Path $MyInvocation.MyCommand.Path
 "$moduleRoot\Modules\*.psm1" |
+? { Test-Path -PathType Container -Path $_ } |
 Resolve-Path |
 ? { -not $_.ProviderPath.ToLower().Contains(".tests.")} |
 % { Import-Module -Force $_.ProviderPath }
