@@ -29,4 +29,7 @@ C:
 
 D:
     exec:
-        - echo %cd%
+        - PS:
+            key1: 1
+            key2: true
+

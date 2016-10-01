@@ -74,7 +74,7 @@ function Invoke-Executor {
             Write-Host "Task $name > $_ : $($cmd[$_])"
             if (-not $script:Opts.Test) {
                 try {
-                    $result.output = & $_ -Exports $script:Exports -Arguments $cmd[$_]
+                    $result.output = & "$prefix$_" -Exports $script:Exports -Arguments $cmd[$_]
                     $result.state = $?
                     if (-not $result.state) { throw "Module Faild: $_ : $($cmd[$_])"}
                     Write-Host $result.output
@@ -196,12 +196,13 @@ function Publish-Document {
 }
 
 # モジュールのロード
+$prefix = "Publish-Document_"
 $modules = New-Object PSObject
 $moduleRoot = Split-Path -Path $MyInvocation.MyCommand.Path
 "$moduleRoot\Modules\*.psm1" |
-? { Test-Path -PathType Container -Path $_ } |
+? { Test-Path -PathType Leaf -Path $_ } |
 Resolve-Path |
 ? { -not $_.ProviderPath.ToLower().Contains(".tests.")} |
-% { Import-Module -Force $_.ProviderPath }
+% { Import-Module -Prefix $prefix -Force -Verbose $_.ProviderPath }
 
 Export-ModuleMember -Function Publish-Document
