@@ -49,12 +49,15 @@ function Compare-Datetime {
     }
 }
 function Invoke-Executor {
-    param([System.Object]$cmd)
+    param(
+        [System.String]$name,
+        [System.Object]$cmd
+    )
     $result = New-Object PSObject |
        Add-Member -PassThru NoteProperty state $true |
        Add-Member -PassThru NoteProperty output $null
     if ($cmd.GetType().Name -eq "String") {
-        Write-Host "> $cmd"
+        Write-Host "Task $name > $cmd"
         if (-not $script:Opts.Test) {
             $result.output = cmd /c $cmd
             $result.state = $?
@@ -62,7 +65,7 @@ function Invoke-Executor {
         }
     } else {
         $cmd.keys | Select -First 1 | % {
-            Write-Host "> $_ : $($cmd[$_])"
+            Write-Host "Task $name > $_ : $($cmd[$_])"
             if (-not $script:Opts.Test) {
                 $result.output = & $_ -Exports $script:Exports -Arguments $cmd[$_]
                 $result.state = $?
@@ -70,7 +73,6 @@ function Invoke-Executor {
             }
         }
     }
-    Write-Host ""
     return $result
 }
 function Invoke-Task {
@@ -93,18 +95,18 @@ function Invoke-Task {
         % { $node["from"] } |
         ? { $_ } |
         % {
-            Invoke-Task($_) > $null
+            Invoke-Task $_ > $null
         }
     } else {
         # ターゲットとなるファイルが存在しないとき、依存先タスクを全て実行する
         $node["from"] | ? { $_ } | 
         % {
-            Invoke-Task($_) > $null
+            Invoke-Task $_ > $null
         }
     }
 
     # タスクの実行（実行結果が一つでも失敗なら、タスクのステータスは失敗）
-    $result = $node["exec"] | ? { $_ } | % { Invoke-Executor($_) }
+    $result = $node["exec"] | ? { $_ } | % { Invoke-Executor $node["name"] $_ }
     $result = $result | ? { -not $_ } | select -first 1
     if ($result) { $node["result"] = $result } else { $node["result"] = "success" }
     
