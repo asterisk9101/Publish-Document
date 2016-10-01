@@ -5,7 +5,7 @@
 [System.Management.Automation.PSCustomObject]$Opts  # オプション解析結果を格納するコンテナ
 
 function Get-Graph {
-    param($Target)
+    param([String]$Target)
 
     # 循環グラフはエラーとする
     if ($script:circle.Contains($Target)) { throw "circle graph: $Target" }
@@ -33,7 +33,7 @@ function Get-Graph {
     return $root
 }
 function Compare-Datetime {
-    param($node)
+    param([System.Collections.Hashtable]$node)
     $date1 = Get-ItemPropertyValue -Name LastWriteTime -Path $node["name"]
     $date2 = $node["from"] |
         ? { $_ } |
@@ -49,7 +49,7 @@ function Compare-Datetime {
     }
 }
 function Invoke-Executor {
-     param($cmd)
+     param([System.Object]$cmd)
      if ($cmd.GetType().Name -eq "String") {
          Write-Host (cmd /c "$cmd")
      } else {
@@ -61,7 +61,7 @@ function Invoke-Executor {
      return $?
 }
 function Invoke-Task {
-    param($node)
+    param([System.Collections.Hashtable]$node)
     # 実行済みのタスクはスキップする
     if ($node["state"] -eq "executed") { return }
 
@@ -96,7 +96,7 @@ function Invoke-Task {
     return $node["result"]
 }
 function Test-Task {
-    param($graph)
+    param([System.Collections.Hashtable]$graph)
     $graph["from"] | ? { $_ } | % {
         Test-Task($_)
     }
@@ -115,7 +115,7 @@ function Test-Task {
     }
 }
 function Show-TaskList {
-    param($graph)
+    param([System.Collections.Hashtable]$graph)
     $graph.keys | % {
         $obj = $graph[$_]
         if (-not $obj.hidden) {
@@ -127,10 +127,10 @@ function Show-TaskList {
 }
 function Publish-Document {
     param(
-        $Target = "default",
-        $File = ".\Publish",
-        [switch]$Test = $false,
-        [switch]$List = $false
+        [System.String]$Target = "default",
+        [System.String]$File = ".\Publish",
+        [switch][System.Boolean]$Test = $false,
+        [switch][System.Boolean]$List = $false
     )
 
     # モジュール全体で共用する変数の初期化
@@ -145,7 +145,7 @@ function Publish-Document {
     # この辺から処理開始
     $script:Dependencies = Import-YAML (Resolve-Path $File)
 
-    if ($Opts["List"]) {
+    if ($Opts.List) {
         Show-TaskList $script:Dependencies
         return # return
     }
@@ -159,7 +159,7 @@ function Publish-Document {
     }
     $script:Graph = Get-Graph($Target)
 
-    if ($Opts["Test"]) {
+    if ($Opts.Test) {
         Test-Task $script:Graph
         return # return
     }
