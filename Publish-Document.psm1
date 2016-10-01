@@ -19,11 +19,13 @@ function Get-Graph {
         $root.Add("name", $Target) > $null
     } else {
         # Publish ファイルにターゲットがある場合
-        if ($root.from) {
+        # ターゲットを Graph ノードに置換する
+        $root.from | ? { $_ } |
+        % BEGIN {
             $children = New-Object System.Collections.ArrayList
-            $root.from | % {
-                $children.Add((Get-Graph($_))) > $null
-            }
+        } PROCESS {
+            $children.Add((Get-Graph($_))) > $null
+        } END {
             $root.from = $children
         }
     }
