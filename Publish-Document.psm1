@@ -21,11 +21,11 @@ function Get-Graph {
         # Publish ファイルにターゲットがある場合
         # ターゲットを Graph ノードに置換する
         $root.from | ? { $_ } |
-        % BEGIN {
+        % {
             $children = New-Object System.Collections.ArrayList
-        } PROCESS {
+        } {
             $children.Add((Get-Graph($_))) > $null
-        } END {
+        } {
             $root.from = $children
         }
     }
