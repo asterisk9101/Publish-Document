@@ -56,20 +56,31 @@ function Invoke-Executor {
     $result = New-Object PSObject |
        Add-Member -PassThru NoteProperty state $true |
        Add-Member -PassThru NoteProperty output $null
+
     if ($cmd.GetType().Name -eq "String") {
         Write-Host "Task $name > $cmd"
         if (-not $script:Opts.Test) {
-            $result.output = cmd /c $cmd
-            $result.state = $?
-            Write-Host $result.output
+            try {
+                $result.output = cmd /c $cmd
+                $result.state = $?
+                if (-not $result.state) { throw "Command Faild: $cmd"}
+                Write-Host $result.output
+            } catch {
+                throw $_
+            }
         }
     } else {
         $cmd.keys | Select -First 1 | % {
             Write-Host "Task $name > $_ : $($cmd[$_])"
             if (-not $script:Opts.Test) {
-                $result.output = & $_ -Exports $script:Exports -Arguments $cmd[$_]
-                $result.state = $?
-                Write-Host $result.output
+                try {
+                    $result.output = & $_ -Exports $script:Exports -Arguments $cmd[$_]
+                    $result.state = $?
+                    if (-not $result.state) { throw "Module Faild: $_ : $($cmd[$_])"}
+                    Write-Host $result.output
+                } catch {
+                    throw $_
+                }
             }
         }
     }
@@ -106,11 +117,21 @@ function Invoke-Task {
     }
 
     # タスクの実行（実行結果が一つでも失敗なら、タスクのステータスは失敗）
-    $result = $node["exec"] | ? { $_ } | % { Invoke-Executor $node["name"] $_ }
-    $result = $result | ? { -not $_ } | select -first 1
-    if ($result) { $node["result"] = $result } else { $node["result"] = "success" }
+    $result = $node["exec"] |
+        ? { $_ } |
+        % {
+            # タスクで定義されたコマンドまたはモジュールの実行
+            Invoke-Executor $node["name"] $_ } |
+        ? { -not $_ } | 
+        Select -First 1
+
+    if ($result) {
+        $node["result"] = $result
+    } else {
+        $node["result"] = $result
+    }
     
-    # タスクのステータスを実行済みに変更
+    # タスクの状態を実行済みに変更
     $node["state"] = "executed"
 
     return $node["result"]
@@ -161,13 +182,17 @@ function Publish-Document {
     % {
         $script:Dependencies[$_].Add("name", $_) # ターゲットの名前もしくは生成するファイルの名前
         $script:Dependencies[$_].Add("state", "wait") # ノードの状態
-        $script:Dependencies[$_].Add("result", "") # 実行結果
+        $script:Dependencies[$_].Add("result", $null) # 実行結果
     }
 
     # 依存関係を解決し、新しくグラフ（DAG）を作る
     $script:Graph = New-Graph $Target
 
-    Invoke-Task $script:Graph # 結果を出力する
+    try {
+        Invoke-Task $script:Graph # 結果を出力する
+    } catch {
+        Write-Error $_
+    }
 }
 
 # モジュールのロード
