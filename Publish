@@ -1,0 +1,32 @@
+default:
+    desc: デフォルトターゲット
+    from:
+        - A
+A:
+    desc: ターゲットA
+    from:
+        - B
+        - C
+        - D
+    exec:
+        - echo A
+        - echo %computername% %date% %time%
+
+B:
+    desc: ターゲットB
+    from:
+        - fileA
+        - D
+    exec:
+        - echo B
+
+C:
+    from:
+        - fileB
+        - D
+    exec:
+        - echo C
+
+D:
+    exec:
+        - echo %cd%
