@@ -58,7 +58,7 @@ function Invoke-Executor {
        Add-Member -PassThru NoteProperty output $null
 
     if ($cmd.GetType().Name -eq "String") {
-        Write-Host "Task $name > $cmd"
+        Write-Host "Task $name > $cmd" -ForegroundColor Green
         if (-not $script:Opts.Test) {
             try {
                 $result.output = cmd /c $cmd
@@ -71,7 +71,7 @@ function Invoke-Executor {
         }
     } else {
         $cmd.keys | Select -First 1 | % {
-            Write-Host "Task $name > $_ : $($cmd[$_])"
+            Write-Host "Task $name > $_ : $($cmd[$_])" -ForegroundColor Green
             if (-not $script:Opts.Test) {
                 try {
                     $result.output = & "$prefix$_" -Exports $script:Exports -Arguments $cmd[$_]
@@ -90,10 +90,10 @@ function Invoke-Task {
     param([System.Collections.Hashtable]$node)
     # 実行済みのタスクはスキップする
     if ($node["state"] -eq "executed") {
-        Write-Host "Skip: Task $($node.name)"
+        Write-Host "Skip: Task $($node.name)"  -ForegroundColor Yellow
         return
     } else {
-        Write-Host "Call: Task $($node.name)"
+        Write-Host "Call: Task $($node.name)" -ForegroundColor Green
     }
 
     if ((Test-Path $node["name"])) {
