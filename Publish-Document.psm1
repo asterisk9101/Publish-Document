@@ -49,26 +49,29 @@ function Compare-Datetime {
     }
 }
 function Invoke-Executor {
-     param([System.Object]$cmd)
-     $result = New-Object PSObject |
-        Add-Member -PassThru NoteProperty state $true |
-        Add-Member -PassThru NoteProperty output $null
-
-     if ($cmd.GetType().Name -eq "String") {
-         Write-Host "> $cmd"
-         $result.output = cmd /c $cmd
-         $result.state = $?
-         Write-Host $result.output
-     } else {
-         $cmd.keys | Select -First 1 | % {
-             Write-Host "> $_ : $($cmd[$_])"
-             $result.output = & $_ -Exports $script:Exports -Arguments $cmd[$_]
-             $result.state = $?
-             Write-Host $result.output
-         }
-     }
-     Write-Host ""
-     return $result
+    param([System.Object]$cmd)
+    $result = New-Object PSObject |
+       Add-Member -PassThru NoteProperty state $true |
+       Add-Member -PassThru NoteProperty output $null
+    if ($cmd.GetType().Name -eq "String") {
+        Write-Host "> $cmd"
+        if (-not $script:Opts.Test) {
+            $result.output = cmd /c $cmd
+            $result.state = $?
+            Write-Host $result.output
+        }
+    } else {
+        $cmd.keys | Select -First 1 | % {
+            Write-Host "> $_ : $($cmd[$_])"
+            if (-not $script:Opts.Test) {
+                $result.output = & $_ -Exports $script:Exports -Arguments $cmd[$_]
+                $result.state = $?
+                Write-Host $result.output
+            }
+        }
+    }
+    Write-Host ""
+    return $result
 }
 function Invoke-Task {
     param([System.Collections.Hashtable]$node)
@@ -109,25 +112,6 @@ function Invoke-Task {
     $node["state"] = "executed"
 
     return $node["result"]
-}
-function Test-Task {
-    param([System.Collections.Hashtable]$graph)
-    $graph["from"] | ? { $_ } | % {
-        Test-Task($_)
-    }
-    $graph.exec | ? { $_ } | % {
-        if ($_.GetType().Name -eq "String") {
-            Write-Output "$_"
-        } elseif ($_.GetType().Name -eq "Hashtable") {
-            $hash = $_
-            $hash.keys | % {
-                Write-Output "$_"
-                Write-Output $hash[$_]
-            }
-        } else {
-            throw "TypeError"
-        }
-    }
 }
 function Show-TaskList {
     param([System.Collections.Hashtable]$graph)
@@ -180,11 +164,6 @@ function Publish-Document {
 
     # 依存関係を解決し、新しくグラフ（DAG）を作る
     $script:Graph = New-Graph $Target
-
-    if ($Opts.Test) {
-        Test-Task $script:Graph
-        return # return
-    }
 
     Invoke-Task $script:Graph # 結果を出力する
 }
