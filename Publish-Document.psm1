@@ -97,12 +97,10 @@ function Invoke-Task {
 }
 function Test-Task {
     param($graph)
-    if ($graph.ContainsKey("from")) {
-        $graph["from"] | % {
-            Test-Task($_)
-        }
+    $graph["from"] | ? { $_ } | % {
+        Test-Task($_)
     }
-    $graph.exec | ? { $_ -ne $null } | % {
+    $graph.exec | ? { $_ } | % {
         if ($_.GetType().Name -eq "String") {
             Write-Output "$_"
         } elseif ($_.GetType().Name -eq "Hashtable") {
