@@ -160,6 +160,7 @@ function Show-TaskList {
     Publishfile の書式は一般的な YAML 形式に従います。詳細は EXAMPLE を参照のこと。
 
     動作には Import-YAML が必要です。
+    https://github.com/asterisk9101/Import-YAML
 
 .PARAMETER Target
     指定されたターゲットからタスクを開始します。
@@ -202,7 +203,6 @@ function Show-TaskList {
         一方で module_name のようにハッシュで指定すると、Publish-Document の内部で定義されたモジュールが実行されます。
 .LINK
     https://github.com/asterisk9101/Publish-Document
-    https://github.com/asterisk9101/Import-YAML
 #>
 function Publish-Document {
     param(
