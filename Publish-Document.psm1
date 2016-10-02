@@ -37,12 +37,12 @@ function Compare-Datetime {
     $date1 = Get-ItemPropertyValue -Name LastWriteTime -Path $node["name"]
     $date2 = $node["from"] |
         ? { $_ } |
-        ? { Test-Path $_ } |
-        % { Get-ItemPropertyValue -Name LastWriteTime -Path $_ } |
+        ? { Test-Path $_["name"] } |
+        % { Get-ItemPropertyValue -Name LastWriteTime -Path $_["name"] } |
         sort |
         select -last 1
 
-    if ($from -eq $Null) {
+    if ($date2 -eq $Null) {
         return $False
     } else {
         return $date1 -lt $date2
@@ -101,12 +101,14 @@ function Invoke-Task {
 
         # ターゲットの更新日時が依存先の更新日時より古いとき、
         # 依存先のタスクを実行する
-        Write-Output 1 |
-        ? { Compare-Datetime($node) } |
-        % { $node["from"] } |
-        ? { $_ } |
-        % {
-            Invoke-Task $_ > $null
+        if (Compare-Datetime($node)) {
+            $node["from"] | ? { $_ } | % {
+                Invoke-Task $_ > $null
+            }
+        } else {
+            $node["from"] | ? { $_ } | % {
+                Write-Host -ForegroundColor Yellow "Skip: Task $($_['name'])"
+            }
         }
     } else {
         # ターゲットとなるファイルが存在しないとき、依存先タスクを全て実行する
