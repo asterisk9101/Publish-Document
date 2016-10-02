@@ -4,6 +4,16 @@
 [System.Collections.Hashtable]$Exports  # タスク間のデータ交換用コンテナ
 [System.Management.Automation.PSCustomObject]$Opts  # オプション解析結果を格納するコンテナ
 
+function Write-Log {
+    param($Message, $Level = 6)
+    $date = Get-Date -UFormat "%Y/%m/%d %T"
+    switch ($Level) {
+        default { Write-Host -ForegroundColor Green "$date [INFO] $Message" }
+        3 { Write-Host -ForegroundColor Magenta "$date [DEBUG] $Message" }
+        2 { Write-Host -ForegroundColor Red "$date [ERROR] $Message" }
+        1 { Write-Host -ForegroundColor White "$Message" }
+    }
+}
 function New-Graph {
     param([System.String]$Target)
 
@@ -58,7 +68,7 @@ function Invoke-Executor {
        Add-Member -PassThru NoteProperty output $null
 
     if ($cmd.GetType().Name -eq "String") {
-        Write-Host "Task $name > $cmd" -ForegroundColor Green
+        Write-Log "Task $name > $cmd"
         if (-not $script:Opts.Test) {
             try {
                 $result.output = cmd /c $cmd
@@ -71,7 +81,7 @@ function Invoke-Executor {
         }
     } else {
         $cmd.keys | Select -First 1 | % {
-            Write-Host "Task $name > $_ : $($cmd[$_])" -ForegroundColor Green
+            Write-Log "Task $name > $_ : $($cmd[$_])"
             if (-not $script:Opts.Test) {
                 try {
                     $result.output = & "$prefix$_" -Exports $script:Exports -Arguments $cmd[$_]
@@ -90,10 +100,10 @@ function Invoke-Task {
     param([System.Collections.Hashtable]$node)
     # 実行済みのタスクはスキップする
     if ($node["state"] -eq "executed") {
-        Write-Host "Skip: Task $($node.name)"  -ForegroundColor Yellow
+        Write-Log "Skip: Task $($node.name)"  -Level 3
         return
     } else {
-        Write-Host "Call: Task $($node.name)" -ForegroundColor Green
+        Write-Log "Call: Task $($node.name)"
     }
 
     if ((Test-Path $node["name"])) {
@@ -107,7 +117,7 @@ function Invoke-Task {
             }
         } else {
             $node["from"] | ? { $_ } | % {
-                Write-Host -ForegroundColor Yellow "Skip: Task $($_['name'])"
+                Write-Log "Skip: Task $($_['name'])" -Level 3
             }
         }
     } else {
@@ -261,6 +271,6 @@ $moduleRoot = Split-Path -Path $MyInvocation.MyCommand.Path
 ? { Test-Path -PathType Leaf -Path $_ } |
 Resolve-Path |
 ? { -not $_.ProviderPath.ToLower().Contains(".tests.")} |
-% { Import-Module -Prefix $prefix -Force -Verbose $_.ProviderPath }
+% { Import-Module -Prefix $prefix -Force $_.ProviderPath }
 
 Export-ModuleMember -Function Publish-Document
