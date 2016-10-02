@@ -13,12 +13,12 @@ function New-Graph {
 
     $root = $script:Dependencies[$Target]
     if ($root -eq $null) {
-        # Publish ファイルにターゲットが無い場合
+        # Publishfile にターゲットが無い場合
         # $Target はファイル名であると判断して、新しくノードを作る
         $root = New-Object System.Collections.Hashtable
         $root.Add("name", $Target) > $null
     } else {
-        # Publish ファイルにターゲットがある場合
+        # Publishfile にターゲットがある場合
         # ターゲットを Graph ノードに置換する
         $root.from | ? { $_ } |
         % {
@@ -219,7 +219,7 @@ function Publish-Document {
 
     $script:Exports = New-Object System.Collections.Hashtable
 
-    # この辺りから Publish ファイルの解析開始
+    # この辺りから Publishfile の解析開始
     try {
         $Path = Resolve-Path $File
         $script:Dependencies = Import-YAML $Path
@@ -227,7 +227,7 @@ function Publish-Document {
         throw $_
     }
 
-    # Publish ファイルに含まれるタスク一覧を表示して終了する
+    # Publishfile に含まれるタスク一覧を表示して終了する
     if ($Opts.List) {
         Show-TaskList $script:Dependencies
         return # return
