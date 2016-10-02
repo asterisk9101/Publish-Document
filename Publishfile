@@ -1,9 +1,9 @@
-default:
-    desc: ƒfƒtƒHƒ‹ƒgƒ^[ƒQƒbƒg
+ï»¿default:
+    desc: ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚¿ãƒ¼ã‚²ãƒƒãƒˆ
     from:
         - A
 A:
-    desc: ƒ^[ƒQƒbƒgA
+    desc: ã‚¿ãƒ¼ã‚²ãƒƒãƒˆA
     from:
         - B
         - C
@@ -13,7 +13,7 @@ A:
         - echo %computername% %date% %time%
 
 B:
-    desc: ƒ^[ƒQƒbƒgB
+    desc: ã‚¿ãƒ¼ã‚²ãƒƒãƒˆB
     from:
         - fileA
         - D

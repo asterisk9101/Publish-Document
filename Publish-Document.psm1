@@ -147,10 +147,65 @@ function Show-TaskList {
         }
     }
 }
+
+<#
+.SYNOPSIS
+    GNU make の Powershell 版
+
+.DESCRIPTION
+    Publish-Document は GNU make と同様のビルドシステムです。
+    ただし、Makefile の代わりに Publishfile を使用します。
+    Publishfile の書式は一般的な YAML 形式に従います。詳細は EXAMPLE を参照のこと。
+
+    動作には Import-YAML が必要です。
+
+.PARAMETER Target
+    指定されたターゲットからタスクを開始します。
+
+.PARAMETER File
+    指定されたファイルを Publishfile として読み込みます。
+
+.PARAMETER Test
+    呼び出されるタスクの名前と、そのタスクのコマンドを表示して終了します。
+    実際にはコマンドは実行されません。
+    依存するタスクのステータスによっては、実際の実行結果と異なる場合があります。
+
+.PARAMETER List
+    タスクの一覧を表示して終了します。
+
+.EXAMPLE
+    Publish-Document
+
+    Publishfile を読み込んでタスクを実行します。
+    ターゲットのタスクが指定されない場合は、デフォルトのタスク default が実行されます。
+
+    典型的な Publishfile のタスクは以下のようなフォーマットで記述されます。
+
+    Task1:
+        desc: Task1 description
+        from:
+            - Task2
+            - Task3
+        exec:
+            - cmdline
+            - module_name:
+                arg1: "module arguments"
+
+    この時、Task1 はタスクの名前です。
+    desc で指定される文字列には、Task1 の説明を記述します。
+    from で指定されるリストには、Task1 が依存するタスクの名前を列挙します。
+    exec で指定されるリストには、Task1 で実行するコマンドを列挙します。
+        このコマンドは from で指定されたタスクのコマンドよりも後に実行されます。
+        コマンドを cmdline のように文字列で指定すると、cmd.exe でコマンドが実行されます。
+        一方で module_name のようにハッシュで指定すると、Publish-Document の内部で定義されたモジュールが実行されます。
+.LINK
+    https://github.com/asterisk9101/Publish-Document
+    https://github.com/asterisk9101/Import-YAML
+#>
 function Publish-Document {
     param(
         [System.String]$Target = "default",
-        [System.String]$File = ".\Publish",
+        [System.String]$File = ".\Publishfile",
         [switch][System.Boolean]$Test = $false,
         [switch][System.Boolean]$List = $false
     )
@@ -172,6 +227,7 @@ function Publish-Document {
         throw $_
     }
 
+    # Publish ファイルに含まれるタスク一覧を表示して終了する
     if ($Opts.List) {
         Show-TaskList $script:Dependencies
         return # return
