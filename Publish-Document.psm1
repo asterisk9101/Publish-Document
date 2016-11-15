@@ -102,11 +102,11 @@ function Invoke-Task {
     if ($node["state"] -eq "executed") {
         Write-Log "Skip: Task $($node.name)"  -Level 3
         return
-    } else {
-        Write-Log "Call: Task $($node.name)"
     }
 
     if ((Test-Path $node["name"])) {
+        Write-Log "Call: Task $($node.name)"
+        
         # ターゲットとなるファイルが存在するとき、ファイルの更新日時を比較する。
 
         # ターゲットの更新日時が依存先の更新日時より古いとき、
@@ -120,12 +120,15 @@ function Invoke-Task {
                 Write-Log "Skip: Task $($_['name'])" -Level 3
             }
         }
-    } else {
+    } elseif ($node["from"].Length -gt 0) {
         # ターゲットとなるファイルが存在しないとき、依存先タスクを全て実行する
+        Write-Log "Call: Task $($node.name)"
         $node["from"] | ? { $_ } | 
         % {
             Invoke-Task $_ > $null
         }
+    } else {
+        throw "Missing Target: $($node.name)"
     }
 
     # タスクの実行（実行結果が一つでも失敗なら、タスクのステータスは失敗）
